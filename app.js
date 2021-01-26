@@ -99,4 +99,4 @@ app.use((err, req, res, next) => {
   res.render('error', { error: err });
 });
 
-app.listen(process.env.port || 3000);
+app.listen(process.env.PORT || 3000);

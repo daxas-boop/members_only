@@ -15,7 +15,7 @@ const router = require('./routes/mainRouter');
 
 const app = express();
 
-app.use(helmet());
+app.use(helmet({ contentSecurityPolicy: false }));
 
 // Connect to mongo
 const mongoDB = process.env.MONGO_DB_URI || process.env.DEV_DB_URL;

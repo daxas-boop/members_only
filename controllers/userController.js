@@ -11,7 +11,6 @@ exports.signupGet = (req, res) => {
 };
 
 exports.signupPost = [
-  // Validation and sanitization
   body('firstname')
     .trim()
     .isLength({ min: 1 })
@@ -72,8 +71,6 @@ exports.signupPost = [
         errors: errors.array({ onlyFirstError: true }),
       });
     } else {
-      // Success
-
       bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
         if (err) {
           return next(err);
@@ -106,7 +103,6 @@ exports.loginGet = (req, res) => {
 };
 
 exports.loginPost = [
-  // Validation and sanitization
   body('username')
     .trim()
     .isLength({ min: 1 })
@@ -127,7 +123,6 @@ exports.loginPost = [
     }
     next();
   },
-  // Authentication
   passport.authenticate('local', {
     successRedirect: '/',
     failureRedirect: 'login',
@@ -135,8 +130,13 @@ exports.loginPost = [
   }),
 ];
 
-exports.logout = (req, res) => {
-  req.logout();
+exports.logout = (req, res, next) => {
+  req.logout((err) => {
+    if (err) {
+      console.log(err);
+      return next(err);
+    }
+  });
   res.redirect('/');
 };
 
@@ -147,7 +147,6 @@ exports.becomeMemberGet = (req, res) => {
 };
 
 exports.becomeMemberPost = [
-  // Validation and sanitization
   body('solution')
     .trim()
     .isLength({ min: 1 })
@@ -192,7 +191,6 @@ exports.becomeAdminGet = (req, res) => {
 };
 
 exports.becomeAdminPost = [
-  // Validation and sanitization
   body('solution-1')
     .trim()
     .isLength({ min: 1 })

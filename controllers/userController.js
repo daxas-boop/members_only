@@ -1,7 +1,13 @@
 const bcrypt = require('bcryptjs');
-const { body, validationResult } = require('express-validator');
+const { validationResult } = require('express-validator');
 const passport = require('passport');
 const User = require('../models/user');
+const {
+  validateSignup,
+  validateLoginPost,
+  validateBecomeAdminPost,
+  validateBecomeMemberPost,
+} = require('./validations/userController.validations');
 
 exports.signupGet = (req, res) => {
   if (req.user) {
@@ -11,66 +17,10 @@ exports.signupGet = (req, res) => {
 };
 
 exports.signupPost = [
-  body('firstname')
-    .trim()
-    .isLength({ min: 1 })
-    .withMessage('Enter a name.')
-    .isAlphanumeric()
-    .withMessage('Enter only alphanumeric charaters on the name')
-    .escape(),
-  body('lastname')
-    .trim()
-    .isLength({ min: 1 })
-    .withMessage('Enter a last name.')
-    .isAlphanumeric()
-    .withMessage('Enter only alphanumeric caraters on the last name.')
-    .escape(),
-  body('username')
-    .trim()
-    .isLength({ min: 5 })
-    .withMessage('The username must have at least 5 characters.')
-    .isAlphanumeric()
-    .withMessage('Enter only alphanumeric characters on the username.')
-    .custom(async (value) => {
-      const userCheck = await User.findOne({ username: value });
-      if (userCheck !== null) {
-        return Promise.reject();
-      }
-      return Promise.resolve();
-    })
-    .withMessage('Username already in use.')
-    .escape(),
-  body('password')
-    .trim()
-    .isLength({ min: 6 })
-    .withMessage('The password must have at least 6 characters.')
-    .isAlphanumeric()
-    .withMessage('Enter only alphanumeric characters on the password.')
-    .escape(),
-  body('confirm-password')
-    .trim()
-    .isLength({ min: 1 })
-    .withMessage('Enter a confirm password.')
-    .escape()
-    .custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error('Password confirmation is incorrect');
-      } else {
-        return true;
-      }
-    }),
-
+  validateSignup,
   (req, res, next) => {
     const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      res.render('signup', {
-        firstname: req.body.firstname,
-        lastname: req.body.lastname,
-        username: req.body.username,
-        errors: errors.array({ onlyFirstError: true }),
-      });
-    } else {
+    if (errors.isEmpty()) {
       bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
         if (err) {
           return next(err);
@@ -91,6 +41,13 @@ exports.signupPost = [
 
         res.redirect('/login');
       });
+    } else {
+      res.render('signup', {
+        firstname: req.body.firstname,
+        lastname: req.body.lastname,
+        username: req.body.username,
+        errors: errors.array({ onlyFirstError: true }),
+      });
     }
   },
 ];
@@ -103,16 +60,7 @@ exports.loginGet = (req, res) => {
 };
 
 exports.loginPost = [
-  body('username')
-    .trim()
-    .isLength({ min: 1 })
-    .withMessage('Enter a username')
-    .escape(),
-  body('password')
-    .trim()
-    .isLength({ min: 1 })
-    .withMessage('Enter a password')
-    .escape(),
+  validateLoginPost,
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -147,27 +95,11 @@ exports.becomeMemberGet = (req, res) => {
 };
 
 exports.becomeMemberPost = [
-  body('solution')
-    .trim()
-    .isLength({ min: 1 })
-    .withMessage('Enter a solution')
-    .custom((value) => {
-      if (value === 'snow' || value === "'snow'") {
-        return true;
-      }
-      throw new Error('Wrong. Try again');
-    })
-    .escape(),
+  validateBecomeMemberPost,
   (req, res, next) => {
     const errors = validationResult(req);
 
-    if (!errors.isEmpty()) {
-      res.render('member_form', {
-        user: req.user.toJSON(),
-        solution: req.body.solution,
-        errors: errors.array({ onlyFirstError: true }),
-      });
-    } else {
+    if (errors.isEmpty()) {
       User.findByIdAndUpdate(
         req.body.userid,
         { membership_status: 'member' },
@@ -180,6 +112,12 @@ exports.becomeMemberPost = [
           res.redirect('/');
         }
       );
+    } else {
+      res.render('member_form', {
+        user: req.user.toJSON(),
+        solution: req.body.solution,
+        errors: errors.array({ onlyFirstError: true }),
+      });
     }
   },
 ];
@@ -191,38 +129,10 @@ exports.becomeAdminGet = (req, res) => {
 };
 
 exports.becomeAdminPost = [
-  body('solution-1')
-    .trim()
-    .isLength({ min: 1 })
-    .withMessage('Enter a solution to the first problem.')
-    .custom((value) => {
-      if (value === 'undefined') {
-        return true;
-      }
-      throw new Error('The first problem is wrong.');
-    })
-    .escape(),
-  body('solution-2')
-    .trim()
-    .isLength({ min: 1 })
-    .withMessage('Enter a solution to the second problem.')
-    .custom((value) => {
-      if (value === 'Two') {
-        return true;
-      }
-      throw new Error('The second problem is wrong.');
-    })
-    .escape(),
+  validateBecomeAdminPost,
   (req, res, next) => {
     const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      res.render('admin_form', {
-        user: req.user.toJSON(),
-        solution: req.body.solution,
-        errors: errors.array({ onlyFirstError: true }),
-      });
-    } else {
+    if (errors.isEmpty()) {
       User.findByIdAndUpdate(
         req.body.userid,
         { membership_status: 'admin' },
@@ -235,6 +145,12 @@ exports.becomeAdminPost = [
           res.redirect('/');
         }
       );
+    } else {
+      res.render('admin_form', {
+        user: req.user.toJSON(),
+        solution: req.body.solution,
+        errors: errors.array({ onlyFirstError: true }),
+      });
     }
   },
 ];

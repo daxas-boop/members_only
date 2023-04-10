@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('./config/passport');
 const express = require('express');
 const exphbs = require('express-handlebars');
 const mongoose = require('mongoose');
@@ -14,8 +15,8 @@ const createHandlebarsConfig = require('./config/handlebarsConfig');
 const app = express();
 app.use(helmet({ contentSecurityPolicy: false }));
 
-const mongoDB = process.env.MONGO_DB_URI || process.env.DEV_DB_URL;
-mongoose.connect(mongoDB, {
+const mongoDbUrl = process.env.MONGO_DB_URL;
+mongoose.connect(mongoDbUrl, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useFindAndModify: false,
@@ -26,7 +27,6 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 const hbs = exphbs.create(createHandlebarsConfig());
 app.engine('.hbs', hbs.engine);
 app.set('view engine', '.hbs');
-app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use('/public', express.static('public'));
 

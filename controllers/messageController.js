@@ -1,5 +1,9 @@
-const { body, validationResult } = require('express-validator');
+const { validationResult } = require('express-validator');
 const Message = require('../models/message');
+const {
+  validateNewMessagePost,
+  validateEditMessagePost,
+} = require('./validations/messageController.validations');
 
 exports.index = (req, res, next) => {
   Message.find()
@@ -27,19 +31,7 @@ exports.newMessageGet = (req, res) => {
 };
 
 exports.newMessagePost = [
-  // Validation and sanitization
-  body('title')
-    .trim()
-    .isLength({ min: 1, max: 35 })
-    .withMessage('The title must have between 1 and 35 characters')
-    .escape(),
-  body('body')
-    .trim()
-    .isLength({ min: 1, max: 500 })
-    .withMessage('The body must have between 1 and 500 characters')
-    .escape(),
-
-  // Process request after validation and sanitization.
+  validateNewMessagePost,
   (req, res, next) => {
     const errors = validationResult(req);
 
@@ -49,19 +41,19 @@ exports.newMessagePost = [
       created_by: req.user._id,
     });
 
-    if (!errors.isEmpty()) {
-      res.render('message_form', {
-        user: req.user.toJSON(),
-        message: newMessage.toJSON(),
-        errors: errors.array(),
-      });
-    } else {
+    if (errors.isEmpty()) {
       newMessage.save((err) => {
         if (err) {
           return next(err);
         }
         req.flash('status', 'You added a new message.');
         res.redirect('/');
+      });
+    } else {
+      res.render('message_form', {
+        user: req.user.toJSON(),
+        message: newMessage.toJSON(),
+        errors: errors.array(),
       });
     }
   },
@@ -88,19 +80,7 @@ exports.editMessageGet = (req, res, next) => {
 };
 
 exports.editMessagePost = [
-  // Validation and sanitization
-  body('title')
-    .trim()
-    .isLength({ min: 1, max: 35 })
-    .withMessage('The title must have between 1 and 35 characters')
-    .escape(),
-  body('body')
-    .trim()
-    .isLength({ min: 1, max: 500 })
-    .withMessage('The body must have between 1 and 500 characters')
-    .escape(),
-
-  // Process request after validation and sanitization.
+  validateEditMessagePost,
   (req, res, next) => {
     if (req.user.id.toString() !== req.body.created_by) {
       res.render('not_authorized', {
@@ -119,12 +99,7 @@ exports.editMessagePost = [
       _id: req.params.id,
     });
 
-    if (!errors.isEmpty()) {
-      res.render('message_form', {
-        message: message.toJSON(),
-        errors: errors.array(),
-      });
-    } else {
+    if (errors.isEmpty()) {
       Message.findByIdAndUpdate(
         req.params.id,
         { title: req.body.title, body: req.body.body },
@@ -140,6 +115,11 @@ exports.editMessagePost = [
           res.redirect('/');
         }
       );
+    } else {
+      res.render('message_form', {
+        message: message.toJSON(),
+        errors: errors.array(),
+      });
     }
   },
 ];
@@ -158,35 +138,23 @@ exports.deleteMessageGet = (req, res, next) => {
     });
 };
 
-exports.deleteMessagePost = [
-  body('messageid').custom((value) => {
-    if (value === '600fc027086c42c46ce2d753') {
-      // So nobody can delete the welcome message
-      throw new Error('You cannot delete this message');
-    }
-    return true;
-  }),
-  (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      res.render('not_authorized', {
-        user: req.user.toJSON(),
-        message: 'Nobody can delete the welcome message.',
-      });
-    } else {
-      Message.findByIdAndRemove(req.body.messageid, (err, message) => {
-        if (err) {
-          return next(err);
-        }
-        req.flash(
-          'status',
-          `You deleted a message with title: ${message.title}`
-        );
-        res.redirect('/');
-      });
-    }
-  },
-];
+exports.deleteMessagePost = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    res.render('not_authorized', {
+      user: req.user.toJSON(),
+      message: 'Nobody can delete the welcome message.',
+    });
+  } else {
+    Message.findByIdAndRemove(req.body.messageid, (err, message) => {
+      if (err) {
+        return next(err);
+      }
+      req.flash('status', `You deleted a message with title: ${message.title}`);
+      res.redirect('/');
+    });
+  }
+};
 
 exports.pinMessagePost = (req, res, next) => {
   Message.findById(req.body.messageid, (err, message) => {

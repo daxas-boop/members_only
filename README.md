@@ -1,38 +1,22 @@
 # Members only
 
-## Live demo
-[https://members-only-daxas.herokuapp.com](https://members-only-daxas.herokuapp.com/)
+Members Only is a web application that allows users to create an account, post, view, and edit messages on the page. Also they can solve JavaScript related problems, and gain higher status.
 
-## Overview
-You can create and login with an account.<br>
-And then you can solve javascript related problems to gain higher status.<br>
-- Viewers can: View and create posts.<br>
-- Members can: View, create and edit own posts.<br>
-- Admins can: View, create, edit, delete and pin posts.<br>
+## Features
 
-## Dependencies
-  - bcryptjs
-  - compression
-  - connect-flash
-  - connect-mongo
-  - dotenv
-  - express
-  - express-handlebars
-  - express-session
-  - express-validator
-  - handlebars
-  - helmet
-  - luxon
-  - materialize-css
-  - mongoose
-  - passport
-  - passport-local
-  
-## Dev Dependencies
-- eslint
-- eslint-config-airbnb-base
-- eslint-config-prettier
-- eslint-plugin-import
-- eslint-plugin-prettier
-- nodemon
-- prettier
+There are three types of users in Members Only:
+
+- Viewers: Can view and create posts.<br>
+- Members: Can view, create and edit own posts.<br>
+- Admins: Can view, create, edit, delete and pin posts.<br>
+
+## Run locally
+
+To run locally Members Only, follow these steps:
+
+- Clone the repository
+- Create a .env file in the root directory of the project
+- Copy the variables in .env.dist and paste them into .env
+- Fill in the values for the variables in .env
+- Install the dependencies using `npm install`
+- Start the server using `npm start`

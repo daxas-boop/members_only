@@ -1,7 +1,7 @@
 const { DateTime } = require('luxon');
 const handlebars = require('handlebars');
 
-export default function createHandlebarsConfig() {
+function createHandlebarsConfig() {
   return {
     extname: '.hbs',
     helpers: {
@@ -29,3 +29,5 @@ export default function createHandlebarsConfig() {
     },
   };
 }
+
+module.exports = createHandlebarsConfig;
